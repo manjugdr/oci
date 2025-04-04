@@ -1,0 +1,46 @@
+name: "Terraform OCI Deployment"
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_vcn:
+        description: "Create VCN? (true/false)"
+        required: true
+        default: "true"
+        type: boolean
+      create_security_group:
+        description: "Create Security Group? (true/false)"
+        required: true
+        default: "true"
+        type: boolean
+
+jobs:
+  terraform:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan for VCN
+        if: github.event.inputs.create_vcn == 'true'
+        run: terraform plan -target=module.vcn -out=tfplan-vcn
+
+      - name: Terraform Plan for Security Group
+        if: github.event.inputs.create_security_group == 'true'
+        run: terraform plan -target=module.vcn.security_group -out=tfplan-security
+
+      - name: Terraform Apply for VCN
+        if: github.event.inputs.create_vcn == 'true'
+        run: terraform apply -auto-approve tfplan-vcn
+
+      - name: Terraform Apply for Security Group
+        if: github.event.inputs.create_security_group == 'true'
+        run: terraform apply -auto-approve tfplan-security
