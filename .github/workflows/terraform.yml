@@ -13,6 +13,11 @@ on:
         required: true
         default: "true"
         type: boolean
+      create_oke:
+        description: "Create OKE? (true/false)"
+        required: true
+        default: "true"
+        type: boolean
 
 jobs:
   terraform:
@@ -33,14 +38,22 @@ jobs:
         if: github.event.inputs.create_vcn == 'true'
         run: terraform plan -target=module.vcn -out=tfplan-vcn
 
-      - name: Terraform Plan for Security Group
-        if: github.event.inputs.create_security_group == 'true'
-        run: terraform plan -target=module.vcn.security_group -out=tfplan-security
-
       - name: Terraform Apply for VCN
         if: github.event.inputs.create_vcn == 'true'
         run: terraform apply -auto-approve tfplan-vcn
 
+      - name: Terraform Plan for Security Group
+        if: github.event.inputs.create_security_group == 'true'
+        run: terraform plan -target=module.vcn.security_group -out=tfplan-security
+
       - name: Terraform Apply for Security Group
         if: github.event.inputs.create_security_group == 'true'
         run: terraform apply -auto-approve tfplan-security
+
+      - name: Terraform Plan for OKE
+        if: github.event.inputs.create_oke == 'true'
+        run: terraform plan -target=module.oke -out=tfplan-oke
+
+      - name: Terraform Apply for OKE
+        if: github.event.inputs.create_oke == 'true'
+        run: terraform apply -auto-approve tfplan-oke
